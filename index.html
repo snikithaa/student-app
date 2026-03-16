@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; }
+        .container { max-width: 100%; margin: 0 auto; padding: 20px; }
+        .login { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; color: white; }
+        .login h1 { font-size: 2em; margin-bottom: 1em; }
+        .login input { width: 90%; max-width: 300px; padding: 15px; margin: 10px 0; border: none; border-radius: 10px; font-size: 1em; }
+        .login button { width: 90%; max-width: 300px; padding: 15px; background: #4CAF50; color: white; border: none; border-radius: 10px; font-size: 1.1em; cursor: pointer; margin-top: 10px; }
+        .login button:hover { background: #45a049; }
+        .dashboard { display: none; }
+        header { background: rgba(255,255,255,0.9); padding: 15px; border-radius: 15px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        header h2 { color: #333; }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        .card { background: rgba(255,255,255,0.95); border-radius: 15px; padding: 20px; box-shadow: 0 6px 25px rgba(0,0,0,0.15); }
+        .card h3 { color: #555; margin-bottom: 15px; font-size: 1.2em; }
+        .todo-input { display: flex; gap: 10px; margin-bottom: 15px; }
+        .todo-input input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        .todo-input button { padding: 12px 20px; background: #2196F3; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .todo-list { max-height: 200px; overflow-y: auto; }
+        .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px; }
+        .todo-item.completed { text-decoration: line-through; opacity: 0.6; }
+        .todo-btn { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; margin-left: 5px; }
+        .edit { background: #FF9800; color: white; }
+        .delete { background: #f44336; color: white; }
+        .dates { display: flex; flex-wrap: wrap; gap: 10px; }
+        .date-item { flex: 1 1 45%; padding: 15px; background: #e3f2fd; border-radius: 10px; text-align: center; cursor: pointer; }
+        .progress { text-align: center; }
+        .progress-bar { width: 100%; height: 20px; background: #ddd; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.5s; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f1f1f1; }
+        .attendance { text-align: center; }
+        .attendance-btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 20px; cursor: pointer; font-size: 1em; }
+        .present { background: #4CAF50; color: white; }
+        .absent { background: #f44336; color: white; }
+        .timer { font-size: 2em; text-align: center; margin: 20px 0; }
+        .timer-btn { padding: 15px 30px; font-size: 1.2em; border: none; border-radius: 50px; cursor: pointer; margin: 0 10px; }
+        .start { background: #4CAF50; color: white; }
+        .stop { background: #f44336; color: white; }
+        .notes-input { width: 100%; height: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; }
+        .calc-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
+        .calc-inputs input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .grade-result { font-size: 1.5em; font-weight: bold; text-align: center; padding: 15px; background: #e8f5e8; border-radius: 10px; }
+        .events { max-height: 150px; overflow-y: auto; }
+        .event { padding: 10px; background: #f0f8ff; margin-bottom: 10px; border-radius: 8px; }
+        .resources ul { list-style: none; }
+        .resources li { padding: 10px; background: #f5f5f5; margin-bottom: 10px; border-radius: 8px; }
+        .logout { position: fixed; top: 20px; right: 20px; background: rgba(0,0,0,0.5); color: white; border: none; padding: 10px; border-radius: 50%; cursor: pointer; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+    <div id="login" class="login">
+        <h1>Student Login</h1>
+        <input type="text" id="username" placeholder="Username (e.g., Snikitha)">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+    </div>
+    <div id="dashboard" class="dashboard">
+        <button class="logout" onclick="logout()">🚪</button>
+        <div class="container">
+            <header>
+                <h2 id="welcome">Welcome, Student!</h2>
+            </header>
+            <div class="grid">
+                <div class="card">
+                    <h3>📝 To-Do List</h3>
+                    <div class="todo-input">
+                        <input type="text" id="todoInput" placeholder="Add task...">
+                        <button onclick="addTodo()">Add</button>
+                    </div>
+                    <div class="todo-list" id="todoList"></div>
+                </div>
+                <div class="card">
+                    <h3>📅 Important Dates</h3>
+                    <div class="dates" id="dates">
+                        <div class="date-item" onclick="addDate()">Add Date</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>📊 Progress</h3>
+                    <div class="progress">
+                        <div>Overall: <span id="progressText">0%</span></div>
+                        <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>📋 Marks</h3>
+                    <table id="marksTable">
+                        <thead><tr><th>Subject</th><th>Mark</th><th>Grade</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    <input type="text" id="markSubject" placeholder="Subject">
+                    <input type="number" id="markScore" placeholder="Score" min="0" max="100">
+                    <button onclick="addMark()">Add</button>
+                </div>
+                <div class="card">
+                    <h3>✅ Attendance</h3>
+                    <div class="attendance">
+                        <div>Today: <span id="todayStatus">Pending</span></div>
+                        <button class="attendance-btn present" onclick="markPresent()">Present</button>
+                        <button class="attendance-btn absent" onclick="markAbsent()">Absent</button>
+                        <div>Streak: <span id="streak">0</span> days</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>⏱️ Study Timer</h3>
+                    <div class="timer" id="timer">00:00</div>
+                    <button class="timer-btn start" onclick="startTimer()">Start</button>
+                    <button class="timer-btn stop" onclick="stopTimer()">Stop</button>
+                </div>
+                <div class="card">
+                    <h3>📝 Quick Notes</h3>
+                    <textarea class="notes-input" id="notes" placeholder="Your notes..."></textarea>
+                    <button onclick="saveNotes()">Save</button>
+                </div>
+                <div class="card">
+                    <h3>🧮 Grade Calculator</h3>
+                    <div class="calc-inputs">
+                        <input type="number" id="calcScore" placeholder="Score" min="0" max="100">
+                        <input type="number" id="calcTotal" placeholder="Total" min="1">
+                    </div>
+                    <div class="grade-result" id="gradeResult">-</div>
+                    <button onclick="calculateGrade()">Calculate</button>
+                </div>
+                <div class="card">
+                    <h3>📰 Events Feed</h3>
+                    <div class="events" id="events"></div>
+                </div>
+                <div class="card">
+                    <h3>🔗 Resources</h3>
+                    <div class="resources">
+                        <ul>
+                            <li>Math Help: Khan Academy</li>
+                            <li>Notes: Notion Template</li>
+                            <li>Study: Pomodoro Timer</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Login/Logout
+        function login() {
+            const user = document.getElementById('username').value || 'Student';
+            const pass = document.getElementById('password').value;
+            if (pass) { // Simple check, no real auth
+                document.getElementById('welcome').textContent = `Welcome, ${user}!`;
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                loadAllData();
+            } else {
+                alert('Enter password');
+            }
+        }
+        function logout() {
+            document.getElementById('login').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+            clearAllData();
+        }
+
+        // To-Do
+        let todos = JSON.parse(localStorage.getItem('todos')) || [];
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            if (input.value.trim()) {
+                todos.push({ text: input.value, completed: false });
+                localStorage.setItem('todos', JSON.stringify(todos));
+                input.value = '';
+                renderTodos();
+            }
+        }
+        function renderTodos() {
+            const list = document.getElementById('todoList');
+            list.innerHTML = '';
+            todos.forEach((todo, i) => {
+                const div = document.createElement('div');
+                div.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <span onclick="toggleTodo(${i})">${todo.text}</span>
+                    <button class="todo-btn edit" onclick="editTodo(${i})">Edit</button>
+                    <button class="todo-btn delete" onclick="deleteTodo(${i})">Delete</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+        function toggleTodo(i) { todos[i].completed = !todos[i].completed; localStorage.setItem('todos', JSON.stringify(todos)); renderTodos(); updateProgress(); }
+        function editTodo(i) { /* Simple toggle edit via contenteditable in render */ }
+        function deleteTodo(i) { todos.splice(i, 1); localStorage.setItem('todos', JSON.stringify(todos)); renderTodos(); updateProgress(); }
+
+        // Dates
+        let dates = JSON.parse(localStorage.getItem('dates')) || ['Exam: Mar 20', 'Assignment: Mar 18'];
+        function addDate() {
+            const date = prompt('Add important date:');
+            if (date) {
+                dates.push(date);
+                localStorage.setItem('dates', JSON.stringify(dates));
+                renderDates();
+            }
+        }
+        function renderDates() {
+            const container = document.getElementById('dates');
+            container.innerHTML = '';
+            dates.forEach(date => {
+                const div = document.createElement('div');
+                div.className = 'date-item';
+                div.textContent = date;
+                container.appendChild(div);
+            });
+        }
+
+        // Progress (simple % from todos)
+        function updateProgress() {
+            const complete = todos.filter(t => t.completed).length;
+            const pct = todos.length ? Math.round((complete / todos.length) * 100) : 0;
+            document.getElementById('progressText').textContent = pct + '%';
+            document.getElementById('progressFill').style.width = pct + '%';
+        }
+
+        // Marks
+        let marks = JSON.parse(localStorage.getItem('marks')) || [];
+        function addMark() {
+            const sub = document.getElementById('markSubject').value;
+            const score = document.getElementById('markScore').value;
+            if (sub && score) {
+                marks.push({ subject: sub, score: parseInt(score), grade: getGrade(score) });
+                localStorage.setItem('marks', JSON.stringify(marks));
+                document.getElementById('markSubject').value = '';
+                document.getElementById('markScore').value = '';
+                renderMarks();
+            }
+        }
+        function getGrade(score) {
+            if (score >= 90) return 'A';
+            if (score >= 80) return 'B';
+            if (score >= 70) return 'C';
+            return 'D';
+        }
+        function renderMarks() {
+            const tbody = document.querySelector('#marksTable tbody');
+            tbody.innerHTML = '';
+            marks.forEach(m => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${m.subject}</td><td>${m.score}</td><td>${m.grade}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Attendance
+        let streak = parseInt(localStorage.getItem('streak')) || 0;
+        let todayStatus = localStorage.getItem('todayStatus') || 'Pending';
+        function markPresent() { todayStatus = 'Present'; updateAttendance(); streak++; localStorage.setItem('streak', streak); }
+        function markAbsent() { todayStatus = 'Absent'; updateAttendance(); streak = 0; localStorage.setItem('streak', 0); }
+        function updateAttendance() {
+            document.getElementById('todayStatus').textContent = todayStatus;
+            document.getElementById('streak').textContent = streak;
+            localStorage.setItem('todayStatus', todayStatus);
+        }
+
+        // Timer
+        let timerInterval;
+        let time = 0;
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                time++;
+                document.getElementById('timer').textContent = new Date(time * 1000).toISOString().substr(14, 5);
+            }, 1000);
+        }
+        function stopTimer() {
+            clearInterval(timerInterval);
+            localStorage.setItem('timerTime', time);
+        }
+
+        // Notes
+        function saveNotes() {
+            localStorage.setItem('notes', document.getElementById('notes').value);
+        }
+
+        // Grade Calc
+        function calculateGrade() {
+            const score = parseInt(document.getElementById('calcScore').value);
+            const total = parseInt(document.getElementById('calcTotal').value);
+            if (score && total) {
+                const pct = Math.round((score / total) * 100);
+                document.getElementById('gradeResult').textContent = pct + '% - ' + getGrade(pct);
+            }
+        }
+
+        // Events (static demo)
+        function renderEvents() {
+            const events = ['Class at 11 AM', 'Homework due tomorrow', 'Club meeting'];
+            const container = document.getElementById('events');
+            container.innerHTML = events.map(e => `<div class="event">${e}</div>`).join('');
+        }
+
+        // Load all
+        function loadAllData() {
+            renderTodos();
+            renderDates();
+            renderMarks();
+            updateAttendance();
+            document.getElementById('notes').value = localStorage.getItem('notes') || '';
+            document.getElementById('timer').textContent = new Date(parseInt(localStorage.getItem('timerTime') || 0) * 1000).toISOString().substr(14, 5);
+            renderEvents();
+            updateProgress();
+        }
+        function clearAllData() {
+            // Optional: localStorage.clear();
+        }
+
+        // Enter key support
+        document.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                if (document.getElementById('login').style.display === 'none') addTodo();
+            }
+        });
+    </script>
+</body>
+</html>
